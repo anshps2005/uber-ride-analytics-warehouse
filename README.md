@@ -118,6 +118,13 @@ Provide a high-level snapshot of Uber’s operational and financial performance.
 - Enables quick executive-level decision-making
 - Identifies overall growth, decline, or inefficiencies
 
+**Backed by SQL:** `mart.vw_kpi_overview`, `mart.vw_monthly_trend`, `mart.vw_quarterly_trend`
+
+**Key numbers**
+- 148,767 bookings: 92,551 completed, 56,817 lost (62.2% completion rate)
+- Revenue **51.85M**, distance **2.51M km**, average **24.64 km** per ride
+- Average rating: drivers 4.23, customers 4.40
+
 ---
 <img src="Overview.png" alt="Overview" width="1000"/>
 
@@ -144,6 +151,13 @@ Analyze performance at the vehicle level to optimize fleet usage.
 - Supports fleet optimization
 - Helps improve pricing and incentive strategies
 
+**Backed by SQL:** `mart.vw_vehicle_performance`
+
+**Key numbers**
+- **Auto** is the top revenue vehicle at 24.84% of revenue, followed by Bike (22.10%) and Go Mini (19.94%)
+- Uber XL contributes only 2.95%
+- Completion rate is about 62% for every vehicle type, so cancellations aren't a vehicle-specific problem
+
 ---
 <img src="Vehicle.png" alt="Vehicle" width="1000"/>
 
@@ -169,6 +183,13 @@ Provide detailed financial insights and identify revenue risks.
 - Identifies profitable segments
 - Detects revenue leakage
 - Supports financial planning and strategy
+
+**Backed by SQL:** `mart.vw_revenue_by_payment`, `mart.vw_monthly_trend`, `mart.mv_daily_kpis`
+
+**Key numbers**
+- **UPI** carries 45.03% of revenue, then Cash (24.87%) and Uber Wallet (11.96%)
+- Average revenue per booking **348.51**; revenue per km **20.63**
+- Estimated lost revenue from unfulfilled bookings: **19.8M**
 
 ---
 <img src="Revenue.png" alt="Revenue" width="1000"/>
@@ -202,6 +223,13 @@ Understand customer behavior, loyalty, and cancellation impact.
 - Reduces revenue loss due to cancellations
 - Enhances customer experience
 
+**Backed by SQL:** `mart.vw_customer_summary`, `mart.vw_customer_segments`, `mart.vw_customer_cancellation_kpis`, `mart.vw_cancellation_reasons`
+
+**Key numbers**
+- Customers by completed rides: **47,581** first-time, **5,650** returning, **11,344** regular
+- **10,500** customer cancellations: a 7% rate, a **5.34M** revenue impact and a 10.29% revenue risk
+- Top customer cancellation reason: **Wrong Address**
+
 ---
 <img src="Customer.png" alt="Customer" width="1000"/>
 
@@ -223,6 +251,14 @@ Analyze geographic and time-based demand patterns.
 - Optimizes driver allocation
 - Supports surge pricing decisions
 - Improves city-level operations
+
+**Backed by SQL:** `mart.vw_location_performance`, `mart.vw_top_routes`, `mart.vw_demand_heatmap`
+
+**Key numbers**
+- Peak demand is **6 PM – 9 PM** with 33,074 rides, followed by 3 PM – 6 PM with 28,879
+- Biggest supply gap: **Old Gurgaon**, where 10.29% of requests get "No Driver Found"
+- 176 pickup locations and 30,564 distinct routes
+- SQL uses eight clean 3-hour time slots, which fixes a Power BI slot that grouped 9 PM – 3 AM and couldn't be sorted
 
 ---
 <img src="Location.png" alt="Location" width="1000"/>
