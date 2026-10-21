@@ -1,7 +1,13 @@
-#  Uber Power BI Dashboard – Business Analytics Project
+#  Uber Ride Analytics Warehouse: PostgreSQL + Power BI
 
-An end-to-end **Power BI analytics dashboard** designed to analyze Uber ride data and deliver actionable insights across **bookings, revenue, vehicles, customers, and locations**.  
-This project focuses on **business-driven analytics**, data modeling, DAX calculations, and professional dashboard design.
+An end-to-end analytics project on **150,000 Uber rides**: a **PostgreSQL data warehouse** that loads, validates and models the raw data, and a **Power BI dashboard** that delivers insights on **bookings, revenue, vehicles, customers and locations**.
+
+**Highlights**
+- Star-schema warehouse (1 fact table, 8 dimensions) built with SQL and PL/pgSQL stored procedures
+- Python ETL pipeline that is idempotent, logged and transactional, and rolls back automatically if data-quality checks fail
+- Every dashboard KPI reproduced in SQL and **reconciled exactly** with the Power BI report (revenue 51,846,183)
+- 10 automated tests, 9 data-quality checks and a read-only database role for BI access
+- 5-page interactive Power BI dashboard built with DAX
 
 ---
 
@@ -14,7 +20,7 @@ This project focuses on **business-driven analytics**, data modeling, DAX calcul
 ##  Project Overview
 
 Uber operates at a large scale with thousands of daily rides. Managing such operations requires transforming raw ride data into **meaningful insights** that support decision-making.  
-This project addresses key business questions related to **performance monitoring, revenue optimization, customer behavior, and operational efficiency** using Microsoft Power BI.
+This project addresses key business questions related to **performance monitoring, revenue optimization, customer behavior, and operational efficiency**. It covers the full analytics lifecycle: raw data → validated SQL warehouse → business metrics → interactive dashboard.
 
 ---
 
@@ -31,10 +37,16 @@ This project addresses key business questions related to **performance monitorin
 
 ##  Dataset Overview
 
-The dataset represents **ride-level transactional data** and includes:
+The dataset ([`data/raw/uber_rides.csv`](data/raw/uber_rides.csv)) represents **ride-level transactional data** for the Delhi NCR region in 2025:
+
+| Rides | Customers | Locations | Vehicle types | Payment methods | Period |
+|---|---|---|---|---|---|
+| 150,000 | 104,114 | 176 | 7 | 5 | Jan – Dec 2025 |
+
+It includes:
 
 - Booking details (Booking ID, Status, Value)
-- Vehicle types (Auto, Bike, Sedan, XL, etc.)
+- Vehicle types (Auto, Bike, eBike, Go Mini, Go Sedan, Premier Sedan, Uber XL)
 - Customer information
 - Pickup and drop locations
 - Distance traveled
@@ -47,7 +59,7 @@ Data is analyzed on **monthly and quarterly** levels to identify trends and patt
 
 ##  Dashboard Architecture
 
-The dashboard is structured into **five analytical pages**, each serving a specific business requirement:
+The dashboard ([`Uber.pbix`](Uber.pbix)) has a home page plus **five analytical pages**, each serving a specific business requirement:
 
 1. Overview  
 2. Vehicle  
@@ -243,6 +255,10 @@ flowchart LR
 ### Project structure
 
 ```
+Uber.pbix                   Power BI dashboard
+*.png                       dashboard page screenshots
+Uber Power BI Dashboard Insight Report.docx   written insight report
+Uber_Power_BI_Dashboard_Presentation.pptx     presentation deck
 sql/
   01_schemas.sql            schemas
   02_audit.sql              run log, rejected rows, DQ results
@@ -257,6 +273,8 @@ sql/
 etl/run_pipeline.py         orchestrates the full load
 tests/test_warehouse.py     reconciliation + integrity tests
 data/raw/uber_rides.csv     source extract (150,000 rides, 2025)
+requirements.txt            Python dependencies
+.env.example                database connection template
 ```
 
 ### Run it
@@ -264,11 +282,15 @@ data/raw/uber_rides.csv     source extract (150,000 rides, 2025)
 Requires PostgreSQL 16+ and Python 3.10+.
 
 ```bash
+git clone https://github.com/anshps2005/uber-ride-analytics-warehouse.git
+cd uber-ride-analytics-warehouse
 pip install -r requirements.txt
-cp .env.example .env          # set PGHOST / PGUSER / PGPASSWORD
+cp .env.example .env          # Windows: copy .env.example .env, then set PGUSER / PGPASSWORD
 python etl/run_pipeline.py    # creates the database, schemas, loads data, runs DQ checks
 pytest                        # verifies SQL results against the raw CSV and the dashboard
 ```
+
+Use `python etl/run_pipeline.py --rebuild` to drop and rebuild everything from scratch.
 
 The pipeline is idempotent (safe to re-run). Staging, load and data-quality checks run in **one transaction**: if a blocking check fails, the whole load is rolled back, the run is marked `FAILED` in `audit.etl_runs`, and the previous data stays in place.
 
@@ -318,22 +340,25 @@ From [`sql/analysis/business_insights.sql`](sql/analysis/business_insights.sql):
 
 ##  Tools & Technologies Used
 
-- **Microsoft Power BI**
-- **Microsoft Fabric / Power BI Service**
-- **DAX (Data Analysis Expressions)**
-- **PostgreSQL**: star schema, stored procedures (PL/pgSQL), window functions, CTEs, materialized views, role-based access
-- **Python**: ETL orchestration (psycopg), reconciliation tests (pytest, pandas)
-- Data Modeling & Relationships
-- Time Intelligence
-- KPI Design & Dashboard UX Principles
+| Area | Technology | Used for |
+|---|---|---|
+| Dashboard | Microsoft Power BI Desktop, Power BI Service / Microsoft Fabric | Interactive 5-page report and online publishing |
+| | DAX, Power Query (M) | Dashboard measures and data loading |
+| Database | PostgreSQL 17 | Data warehouse |
+| | SQL, PL/pgSQL | Tables, views, stored procedures, data-quality checks |
+| Data modeling | Star schema (fact + dimensions) | Organizing data for analytics |
+| SQL techniques | CTEs, window functions, percentiles, correlation, materialized views, indexes, constraints | Analysis and performance |
+| Security | PostgreSQL roles | Read-only access for Power BI |
+| ETL | Python 3, psycopg 3 | Pipeline orchestration and bulk loading (`COPY`) |
+| Testing | pytest, pandas | Reconciling SQL results with raw data and the dashboard |
 
-
+---
 
 ##  Business Impact
 
-This dashboard enables Uber stakeholders to:
+This project enables Uber stakeholders to:
 
-- Track business performance in real time
+- Track business performance from a refreshable, validated data pipeline
 - Identify revenue growth and loss areas
 - Improve fleet and driver utilization
 - Reduce ride cancellations
@@ -347,6 +372,10 @@ This dashboard enables Uber stakeholders to:
 - End-to-end Power BI dashboard development
 - Translating business requirements into analytics
 - Practical use of DAX for real-world problems
+- Designing a star-schema data warehouse in PostgreSQL
+- Building a transactional ETL pipeline with validation, audit logging and rollback
+- Writing analytical SQL with CTEs and window functions
+- Reconciling BI numbers against source data with automated tests
 - Data storytelling and professional dashboard design
 - UX considerations for enterprise dashboards
 
@@ -354,6 +383,9 @@ This dashboard enables Uber stakeholders to:
 
 ##  Future Enhancements
 
+- Point the Power BI report directly at the PostgreSQL `mart` views
+- Docker setup and GitHub Actions CI to run the pipeline and tests automatically
+- Scheduled / incremental data refresh
 - Real-time data integration
 - Predictive demand forecasting
 - Customer churn prediction
