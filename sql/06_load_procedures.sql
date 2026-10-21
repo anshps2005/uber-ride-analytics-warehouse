@@ -26,7 +26,9 @@ BEGIN
     GET DIAGNOSTICS v_rejected = ROW_COUNT;
 
     -- 2. Typed, trimmed copy of the clean rows ---------------------------------
-    DROP TABLE IF EXISTS tmp_rides;
+    IF to_regclass('pg_temp.tmp_rides') IS NOT NULL THEN
+        DROP TABLE tmp_rides;
+    END IF;
     CREATE TEMP TABLE tmp_rides ON COMMIT DROP AS
     SELECT
         v.source_row_num,

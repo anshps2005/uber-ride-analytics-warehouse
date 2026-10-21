@@ -84,12 +84,15 @@ def ensure_database() -> None:
 
 
 def apply_ddl(conn: psycopg.Connection, rebuild: bool) -> None:
+    # Idempotent DDL emits "already exists, skipping" notices on every run; hide them.
+    conn.execute("SET client_min_messages = warning")
     if rebuild:
         log.warning("--rebuild: dropping schemas staging, dw, mart, audit")
         conn.execute("DROP SCHEMA IF EXISTS mart, dw, staging, audit CASCADE")
     for path in sorted(SQL_DIR.glob("[0-9][0-9]_*.sql")):
         log.info("applying %s", path.name)
         conn.execute(path.read_text(encoding="utf-8"))
+    conn.execute("RESET client_min_messages")
     conn.commit()
 
 

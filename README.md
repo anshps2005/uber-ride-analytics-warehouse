@@ -288,11 +288,82 @@ flowchart LR
 | Reporting | `mart` | One view per dashboard page, plus a materialized daily aggregate |
 | Operations | `audit` | Run log (row counts, file SHA-256, status), quarantined rows, data-quality results |
 
+### Star schema
+
+```mermaid
+erDiagram
+    fact_bookings }o--|| dim_date : date_key
+    fact_bookings }o--|| dim_time_slot : time_slot_key
+    fact_bookings }o--|| dim_customer : customer_key
+    fact_bookings }o--|| dim_vehicle : vehicle_key
+    fact_bookings }o--|| dim_location : "pickup / drop"
+    fact_bookings }o--|| dim_booking_status : status_key
+    fact_bookings }o--o| dim_payment_method : payment_method_key
+    fact_bookings }o--o| dim_cancellation_reason : cancellation_reason_key
+
+    fact_bookings {
+        bigint booking_sk PK
+        text booking_id
+        time pickup_time
+        numeric booking_value
+        numeric ride_distance_km
+        numeric driver_rating
+        numeric customer_rating
+    }
+    dim_date {
+        int date_key PK
+        date full_date
+        text month_short
+        text quarter_label
+        bool is_weekend
+    }
+    dim_customer {
+        int customer_key PK
+        text customer_id
+        date first_booking_date
+    }
+    dim_vehicle {
+        smallint vehicle_key PK
+        text vehicle_type
+        text vehicle_group
+    }
+    dim_location {
+        int location_key PK
+        text location_name
+    }
+    dim_booking_status {
+        smallint status_key PK
+        text booking_status
+        bool is_completed
+    }
+```
+
+### SQL in action
+
+These screenshots come from real runs on the full dataset.
+
+**ETL pipeline run:** all SQL is applied, 150,000 rows load with 0 rejected, data-quality checks run, and the headline KPIs print.
+
+<img src="docs/images/pipeline_run.png" alt="ETL pipeline run" width="800"/>
+
+**Data-quality results:** all blocking (ERROR) checks pass. The warnings flag shared booking IDs and fare outliers for review.
+
+<img src="docs/images/data_quality_checks.png" alt="Data-quality checks" width="1000"/>
+
+**Reporting views:** vehicle performance and customer cancellation KPIs, as Power BI reads them.
+
+<img src="docs/images/sql_mart_views.png" alt="SQL mart views" width="900"/>
+
+**Automated tests:** SQL results reconciled against the raw CSV and the published dashboard.
+
+<img src="docs/images/tests_passing.png" alt="Tests passing" width="750"/>
+
 ### Project structure
 
 ```
 Uber.pbix                   Power BI dashboard
 *.png                       dashboard page screenshots
+docs/images/                SQL / pipeline screenshots
 Uber Power BI Dashboard Insight Report.docx   written insight report
 Uber_Power_BI_Dashboard_Presentation.pptx     presentation deck
 sql/
